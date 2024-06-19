@@ -9,7 +9,9 @@
   },
   "dependencies": {
     "element-ui": "^2.3.4",
-    "vue": "^2.5.16"
+    "moment": "^2.30.1",
+    "vue": "^2.5.16",
+    "xlsx": "0.17.0"
   },
   "engines": {
     "node": ">=6"
