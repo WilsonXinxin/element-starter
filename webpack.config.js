@@ -50,7 +50,7 @@ module.exports = (options = {}) => ({
   ],
   resolve: {
     alias: {
-      '~': resolve(__dirname, 'src')
+      '@': resolve(__dirname, 'src'),
     },
     extensions: ['.js', '.vue', '.json', '.css']
   },
