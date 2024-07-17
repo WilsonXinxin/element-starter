@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-upload class="upload-demo" :file-list="fileList" action="#" :auto-upload="false" :on-change="handleChange"
+    <el-upload class="upload-demo" :file-list="fileList" action="#" multiple :auto-upload="false" :on-change="handleChange"
       :on-remove="handleChange">
       <el-button slot="trigger" size="small" type="primary" icon="el-icon-upload2">选取表格</el-button>
       <el-button :loading="parseLoading" style="margin-left: 10px;" size="small" type="success" @click="btnParse">{{
@@ -46,8 +46,14 @@ export default {
         Papa.parse(item.raw, {
           encoding: 'GB2312', // 编码格式
           complete: ({ data }) => {
-            const index = data.findIndex(key => key[0] === '流水号') + 1
-            this.importData.push(...data.slice(index, data.length - 2))
+            const index = data.findIndex(item => item[0] === '流水号') + 1
+            const list = [...data.slice(index, data.length - 2)]
+            const accountIndex = data.findIndex(item => item[0] === '#账户名') + 1
+            const accountName = data[accountIndex][0].slice(1, data[accountIndex][0].length)
+            list.forEach(item => {
+              item.push(accountName)
+            })
+            this.importData.push(...list)
           }
         })
       })
@@ -78,6 +84,7 @@ export default {
       this.importData.forEach(item => {
         const list = {
           '日期': item[1],
+          '账户名': item[8],
           '订单号': (item[3] && item[3].indexOf('订单号') !== -1) ? this.extractNumberFromStart(item[3], '订单号') : '',
           '收入': item[4],
           '支出': item[5],
