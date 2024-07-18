@@ -60,8 +60,8 @@ export default {
 
       // 定时器判断文件是否解析完
       this.timer = setInterval(() => {
-        if (this.firstIndex !== this.importData.length) {
-          this.firstIndex = this.importData.length
+        if (this.lastIndex !== this.importData.length) {
+          this.lastIndex = this.importData.length
         } else {
           if (this.timer !== null) clearInterval(this.timer)
           this.handleExportData()
