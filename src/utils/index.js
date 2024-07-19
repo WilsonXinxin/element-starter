@@ -1,4 +1,4 @@
-
+import xlsx from "xlsx"
 /**
  * Parse the time to string
  * @param {(Object|string|number)} time
@@ -47,4 +47,47 @@ export function parseTime(time, cFormat) {
     return value.toString().padStart(2, '0')
   })
   return time_timer
+}
+
+/**
+ * 截取指定字符中间的数字
+ * @param {*} str 
+ * @param {*} startChar 
+ * @returns 
+ */
+export const extractNumberFromStart = (str, startChar) => {
+  const startIndex = str.indexOf(startChar) + 1;
+  const numStr = str.slice(startIndex).match(/\d+/);
+  return numStr ? numStr[0] : null;
+}
+
+/**
+ * 截取指定字符去掉数字后的字符
+ * @param {*} str 
+ * @param {*} startChar 
+ * @returns 
+ */
+export const extractStr = (str, startChar) => {
+  const startIndex = str.indexOf(startChar) - 1;
+  let sliceStr = str.slice(0, startIndex)
+  if(str.indexOf('订单号:')) sliceStr += ')'
+  return sliceStr
+}
+
+/**
+ * 导出json excel
+ * @param {*} array 
+ * @param {*} sheetName 
+ * @param {*} fileName 
+ * @returns 
+ */
+export const exportExcelFile = (array, sheetName = '表1', fileName = 'example.xlsx') => {
+  const jsonWorkSheet = xlsx.utils.json_to_sheet(array);
+  const workBook = {
+    SheetNames: [sheetName],
+    Sheets: {
+      [sheetName]: jsonWorkSheet,
+    }
+  };
+  return xlsx.writeFile(workBook, fileName);
 }

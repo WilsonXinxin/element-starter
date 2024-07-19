@@ -20,6 +20,10 @@ const routers = [
     component: () => import('@/views/export/stockOrder'),
   },
   {
+    path: '/orderMerge',
+    component: () => import('@/views/export/orderMerge'),
+  },
+  {
     path: '/mergeTable',
     component: () => import('@/views/export/mergeTable'),
   },
