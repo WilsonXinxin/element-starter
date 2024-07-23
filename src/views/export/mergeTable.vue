@@ -5,90 +5,79 @@
       <el-button slot="trigger" size="small" type="primary" icon="el-icon-upload2">选取表格</el-button>
       <el-button :loading="parseLoading" style="margin-left: 10px;" size="small" type="success" @click="btnParse">{{
       parseLoading ? '解析中' : '解析并下载' }}</el-button>
-      <div slot="tip" v-if="showTip" class="el-upload__tip" style="color:red">请先上传文件~</div>
+      <div slot="tip" v-if="tip" class="el-upload__tip" style="color:red">{{ tip }}</div>
     </el-upload>
   </div>
 </template>
 
 <script>
-import Papa from 'papaparse'
-import { parseTime, extractNumberFromStart, extractStr, exportExcelFile } from '@/utils'
+import xlsx from 'xlsx';
+import { parseTime, extractNumberFromStart, extractStr, exportExcelFile, isAttr } from '@/utils'
 
 export default {
   data() {
     return {
       fileList: [],
-      csvData: [],
-      exportData: [],
-      showTip: false,
+      xlsxData: [],
       parseLoading: false,
-      lastIndex: 1,
-      timer: null
+      tip: ''
     }
   },
   methods: {
     handleChange(file, fileList) {
-      console.log(file, fileList);
+      console.log(fileList);
       this.fileList = fileList
-      if (this.fileList.length) this.showTip = false
+      if (this.fileList.length) this.tip = ''
     },
-    parseCsv(fileList) {
+    async parseXlsx(xlsxFileArr) {
       return new Promise((resolve, reject) => {
-        this.csvData = []
-        fileList.forEach(item => {
-          Papa.parse(item.raw, {
-            encoding: 'GB2312', // 编码格式
-            complete: ({ data }) => {
-              const index = data.findIndex(item => item[0] === '流水号') + 1
-              const list = [...data.slice(index, data.length - 2)]
-              const accountIndex = data.findIndex(item => item[0] === '#账户名') + 1
-              const accountName = data[accountIndex][0].slice(1, data[accountIndex][0].length)
-              list.forEach(item => {
-                item.push(accountName)
-              })
-              this.csvData.push(...list)
-            }
+        this.xlsxData = []
+        xlsxFileArr.forEach(async ({ raw }) => {
+          // 读取表格对象
+          const buffer = await raw.arrayBuffer()
+          const workbook = xlsx.read(buffer, {
+            type: 'buffer',
+            cellDates: true,//设为true，将天数的时间戳转为时间格式
+          });
+          const sheetNames = workbook.SheetNames;
+          // 读取第一张表的内容
+          const tableData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetNames[0]]);
+          // 解析出账户名
+          const accountIndex = tableData.findIndex(item => item['#支付宝收支明细'] === '#账户名') + 1
+          const accountName = tableData[accountIndex]['#支付宝收支明细'].slice(1, tableData[accountIndex]['#支付宝收支明细'].length)
+          // 解析出需要的表格数据
+          const index = tableData.findIndex(item => item['#支付宝收支明细'] === '流水号') + 1
+          if (index <= 0) reject('解析表格数据为空，请检查表格类型是否正确~')
+          const list = [...tableData.slice(index, tableData.length - 1)]
+          list.forEach(prod => {
+            this.xlsxData.push({
+              '日期': isAttr(prod, '__EMPTY'),
+              '账户名': accountName,
+              '订单号': (isAttr(prod, '__EMPTY_2') && isAttr(prod, '__EMPTY_2').indexOf('订单号') !== -1) ? extractNumberFromStart(isAttr(prod, '__EMPTY_2'), '订单号') : '',
+              '收入': isAttr(prod, '__EMPTY_3'),
+              '支出': isAttr(prod, '__EMPTY_4'),
+              '摘要': (isAttr(prod, '__EMPTY_2') && isAttr(prod, '__EMPTY_2').indexOf('订单号') !== -1) ? extractStr(isAttr(prod, '__EMPTY_2'), '订单号') : isAttr(prod, '__EMPTY_2'),
+              '支付方式': isAttr(prod, '__EMPTY_1'),
+              '余额': isAttr(prod, '__EMPTY_5'),
+              '资金渠道': isAttr(prod, '__EMPTY_6')
+            })
           })
+          this.xlsxData.length ? resolve() : reject('解析表格数据为空，请检查表格类型是否正确~')
         })
-
-        // 定时器判断文件是否解析完
-        this.timer = setInterval(() => {
-          if (this.lastIndex !== this.csvData.length) {
-            this.lastIndex = this.csvData.length
-          } else {
-            if (this.timer !== null) clearInterval(this.timer)
-            this.csvData.length ? resolve() : reject('csv table is empty!')
-          }
-        }, 200);
       })
     },
     async btnParse() {
       if (!this.fileList.length) {
-        this.showTip = true
+        this.tip = '请先上传文件~'
         return
       }
-
       try {
         this.parseLoading = true
-        await this.parseCsv(this.fileList)
-        const exportData = []
-        this.csvData.forEach(item => {
-          const list = {
-            '日期': item[1],
-            '账户名': item[8],
-            '订单号': (item[3] && item[3].indexOf('订单号') !== -1) ? extractNumberFromStart(item[3], '订单号') : '',
-            '收入': item[4],
-            '支出': item[5],
-            '摘要': (item[3] && item[3].indexOf('订单号') !== -1) ? extractStr(item[3], '订单号') : item[3],
-            '支付方式': item[2],
-            '余额': item[6],
-            '资金渠道': item[7]
-          }
-          exportData.push(list)
-        })
-        exportExcelFile(exportData, 'table1', `example_${parseTime(new Date())}.xlsx`)
+        await this.parseXlsx(this.fileList)
+        exportExcelFile(this.xlsxData, 'table1', `example_${parseTime(new Date())}.xlsx`)
       } catch (error) {
         console.error(error)
+        this.tip = error
       } finally {
         this.parseLoading = false
       }

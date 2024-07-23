@@ -91,3 +91,13 @@ export const exportExcelFile = (array, sheetName = '表1', fileName = 'example.x
   };
   return xlsx.writeFile(workBook, fileName);
 }
+
+/**
+ * 判断name in obj
+ * @param {*} obj 
+ * @param {*} name 
+ * @returns 
+ */
+export const isAttr = (obj, name) => {
+  return (name in obj) ? obj[name] : ''
+}

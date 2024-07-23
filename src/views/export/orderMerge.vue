@@ -120,8 +120,6 @@ export default {
         this.parseLoading = true
         await this.parseXlsx(xlsxFileArr)
         await this.parseCsv(csvFileArr)
-        console.log(this.xlsxData);
-        console.log(this.csvData);
         const exportData = []
         // 找出最大有多少笔重复订单扣款
         this.xlsxData.forEach(item => {
