@@ -141,11 +141,17 @@ export default {
         this.tableData1.forEach(item => {
           const csvArr = this.tableData2.filter(prod => prod['订单号'] === item['订单号'])
           const title = isAttr(item, '货品标题')
-          const colorIndex = title && title.indexOf('颜色:')
-          const color = colorIndex >= 0 ? title.substring(colorIndex + 3, title.length) : ''
-          const specsIndex = title && title.indexOf('机身内存:')
-          const specsEnd = title && title.indexOf('下单备注')
-          const specs = specsIndex >= 0 ? title.substring(specsIndex +5, specsEnd) : ''
+          let color = ''
+          let specs = ''
+          if (title) {
+            const colorIndex = title.indexOf('颜色:')
+            const lastSpace = title.lastIndexOf('(')
+            const colorEnd = lastSpace > colorIndex + 3 ? lastSpace : title.length
+            color = colorIndex >= 0 ? title.substring(colorIndex + 3, colorEnd) : ''
+            const specsIndex = title.indexOf('机身内存:')
+            const specsEnd = title.indexOf('下单备注')
+            specs = specsIndex >= 0 ? title.substring(specsIndex + 5, specsEnd) : ''
+          }
           const list = {
             '订单创建时间': isAttr(item, '订单创建时间'),
             '店铺': isAttr(item, '店铺'),
