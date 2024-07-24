@@ -80,20 +80,22 @@ export default {
             case '#支付宝收支明细': // 支付宝流水表              
               const filterArr = data.filter(item => ('__EMPTY_2' in item) && item['__EMPTY_2'].toString().includes('订单号'))
               filterArr.forEach(prod => {
-              this.tableData2.push({
-                '订单号': extractNumberFromStart(isAttr(prod, '__EMPTY_2'), '订单号'),
-                '支付宝扣款': isAttr(prod, '__EMPTY_4'),
-                '支出摘要': extractStr(isAttr(prod, '__EMPTY_2'), '订单号')
-              })
+                this.tableData2.push({
+                  '订单号': extractNumberFromStart(isAttr(prod, '__EMPTY_2'), '订单号'),
+                  '支付宝扣款': isAttr(prod, '__EMPTY_4'),
+                  '支出摘要': extractStr(isAttr(prod, '__EMPTY_2'), '订单号')
+                })
               })
               break;
             default: // 后台账单表
               if (firstHeader.includes('#账号')) {
+                const accountName = firstHeader.substring(4, firstHeader.length)
                 const filterArr = data.filter(item => ('__EMPTY_3' in item) && item['__EMPTY_3'].toString().includes('NP'))
                 filterArr.forEach(prod => {
                   const index = prod['__EMPTY_3'].indexOf('NP') + 2
                   this.tableData3.push({
                     '订单号': prod['__EMPTY_3'].substring(index, prod['__EMPTY_3'].length),
+                    '店铺': accountName,
                     '已到账金额': prod['__EMPTY_5']
                   })
                 })
@@ -103,7 +105,7 @@ export default {
         })
         // 等待文件解析完毕
         this.timer = setInterval(() => {
-          if(this.lastIndex === (this.fileLength - 1)) {
+          if (this.lastIndex === (this.fileLength - 1)) {
             if (this.timer !== null) clearInterval(this.timer)
             this.tableData1.length ? resolve() : reject('解析表格数据为空，请检查表格类型是否正确~')
           }
@@ -113,8 +115,9 @@ export default {
     mergeTable() {
       this.tableData1.forEach(prod => {
         this.tableData3.forEach(item => {
-          if(prod['订单号'] === item['订单号']) {
+          if (prod['订单号'] === item['订单号']) {
             prod['已到账金额'] = item['已到账金额']
+            prod['店铺'] = item['店铺']
           }
         })
       })
@@ -137,8 +140,15 @@ export default {
         })
         this.tableData1.forEach(item => {
           const csvArr = this.tableData2.filter(prod => prod['订单号'] === item['订单号'])
+          const title = isAttr(item, '货品标题')
+          const colorIndex = title && title.indexOf('颜色:')
+          const color = colorIndex >= 0 ? title.substring(colorIndex + 3, title.length) : ''
+          const specsIndex = title && title.indexOf('机身内存:')
+          const specsEnd = title && title.indexOf('下单备注')
+          const specs = specsIndex >= 0 ? title.substring(specsIndex +5, specsEnd) : ''
           const list = {
             '订单创建时间': isAttr(item, '订单创建时间'),
+            '店铺': isAttr(item, '店铺'),
             '订单号': isAttr(item, '订单号'),
             '订单状态': isAttr(item, '订单状态'),
             '买家公司名称': isAttr(item, '买家公司名称'),
@@ -150,7 +160,9 @@ export default {
             '货品总价': isAttr(item, '货品总价'),
             '运费': isAttr(item, '运费（元）'),
             '商家改价': isAttr(item, '商家改价（元）'),
-            '货品标题': isAttr(item, '货品标题'),
+            '货品标题': title,
+            '规格': specs,
+            '颜色': color,
             '单价': isAttr(item, '单价'),
             '数量': isAttr(item, '数量'),
             '型号': isAttr(item, '型号'),
@@ -168,7 +180,7 @@ export default {
           }
           entries.splice(insertIndex + this.maxLength, 0, ['支出摘要', (csvArr.length && csvArr.length >= this.maxLength - 1) ? csvArr[0]['支出摘要'] : ''])
           exportData.push(Object.fromEntries(entries))
-        })        
+        })
         exportExcelFile(exportData, 'table1', `订单合并_${parseTime(new Date(), '{y}-{m}-{d} {h}:{i}:{s}')}.xlsx`)
       } catch (error) {
         console.error(error)
