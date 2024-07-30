@@ -89,14 +89,15 @@ export default {
               break;
             default: // 后台账单表
               if (firstHeader.includes('#账号')) {
-                const accountName = firstHeader.substring(4, firstHeader.length)
-                const filterArr = data.filter(item => ('__EMPTY_3' in item) && item['__EMPTY_3'].toString().includes('NP'))
+                const accountName = firstHeader.substring(4, firstHeader.length)             
+                const filterArr = data.filter(item => ('__EMPTY_2' in item) && item['__EMPTY_2'].toString().includes('NP'))
+                console.log(data);
                 filterArr.forEach(prod => {
-                  const index = prod['__EMPTY_3'].indexOf('NP') + 2
+                  const index = prod['__EMPTY_2'].indexOf('NP') + 2
                   this.tableData3.push({
-                    '订单号': prod['__EMPTY_3'].substring(index, prod['__EMPTY_3'].length),
+                    '订单号': prod['__EMPTY_2'].substring(index, prod['__EMPTY_2'].length),
                     '店铺': accountName,
-                    '已到账金额': prod['__EMPTY_5']
+                    '已到账金额': prod['__EMPTY_11']
                   })
                 })
               }
@@ -171,7 +172,8 @@ export default {
             '颜色': color,
             '单价': isAttr(item, '单价'),
             '数量': isAttr(item, '数量'),
-            '型号': isAttr(item, '型号'),
+            '平台型号': isAttr(item, '型号'),
+            '内部型号': isAttr(item, '货号'),
             '收货人姓名': isAttr(item, '收货人姓名'),
             '联系电话': isAttr(item, '联系电话'),
             '货运公司': isAttr(item, '货运公司'),
