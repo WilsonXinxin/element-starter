@@ -105,13 +105,16 @@ export default {
         const exportData = []
         this.tableData2.forEach(item => {
           const list = {
+            '订单号': item['单据编号'],
             '系统订单客户': item['客户名称'],
             '旺旺名': item['旺旺名'],
-            '系统成交金额': item['成交金额']
+            '系统成交金额': item['成交金额'],
+            '实付款': ''
           }
           this.tableData1.forEach(key => {
-            if(key['买家会员'] === item['旺旺名']) {
+            if(key['买家会员'] === item['旺旺名'] && key['订单号'] === item['单据编号']) {
               list['订单状态'] = key['订单状态']
+              list['实付款'] = key['实付款（元）']
             }
           })
           exportData.push(list)
