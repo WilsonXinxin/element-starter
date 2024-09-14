@@ -28,6 +28,10 @@ const routers = [
     component: () => import('@/views/export/mergeTable'),
   },
   {
+    path: '/systemOrderMerge',
+    component: () => import('@/views/export/systemOrderMerge'),
+  },
+  {
     path: '/404',
     component: () => import('@/views/common/error-page/404'),
     hidden: true

@@ -15,6 +15,11 @@
         前往订单合并
       </el-button>
     </div>
+    <div>
+      <el-button class="button" icon="el-icon-s-promotion" @click="goToRoute('/systemOrderMerge')">
+        前往系统和后台订单合并
+      </el-button>
+    </div>
   </div>
 </template>
 

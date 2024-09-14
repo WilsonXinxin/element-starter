@@ -21,12 +21,8 @@ export default {
   data() {
     return {
       fileList: [],
-      csvData: [],
-      xlsxData: [],
       tip: false,
       parseLoading: false,
-      lastIndex: 1,
-      timer: null,
       csvTableHeader: {
         '流水号': 0,
         '时间': 1,
